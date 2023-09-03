@@ -1,4 +1,4 @@
-module github.com/KommToby/gosu
+module github.com/kommtoby/gosu
 
 go 1.16
 
