@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	gosu "github.com/AccraZed/gosu"
+	gosu "github.com/KommToby/gosu"
 	"github.com/joho/godotenv"
 )
 
