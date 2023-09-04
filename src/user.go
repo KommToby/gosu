@@ -1,6 +1,10 @@
 package gosu
 
-import "time"
+import (
+	"encoding/json"
+	"fmt"
+	"time"
+)
 
 type GradeCounts struct {
 	A   int `json:"a"`   // Number of A ranked scores.
@@ -37,24 +41,21 @@ type ProfilePage struct {
 }
 type User struct {
 	UserCompact
-	CoverURL     string        `json:"cover_url"`     // URL of profile cover
-	Discord      string        `json:"discord"`       //
-	HasSupported bool          `json:"has_supported"` // whether or not ever being a supporter in the past
-	Interests    string        `json:"interests"`     //
-	JoinDate     time.Time     `json:"join_date"`     //
-	Kudosu       Kudosu        `json:"Kudosu"`        //
-	Location     string        `json:"location"`      //
-	MaxBlocks    int           `json:"max_blocks"`    // maximum int of users allowed to be blocked
-	MaxFriends   int           `json:"max_friends"`   // maximum int of friends allowed to be added
-	Occupation   string        `json:"occupation"`    //
-	Playmode     GameMode      `json:"playmode"`      //
-	Playstyle    string        `json:"playstyle"`     // Device choices of the user.
-	PostCount    int           `json:"post_count"`    // int of forum posts
-	ProfileOrder []ProfilePage `json:"profile_order"` // ordered array of sections in user profile page
-	Title        string        `json:"title"`         // user-specific title
-	TitleURL     string        `json:"title_url"`     //
-	Twitter      string        `json:"twitter"`       //
-	Website      string        `json:"website"`       //
+	CoverURL     string    `json:"cover_url"`     // URL of profile cover
+	Discord      string    `json:"discord"`       //
+	HasSupported bool      `json:"has_supported"` // whether or not ever being a supporter in the past
+	Interests    string    `json:"interests"`     //
+	JoinDate     time.Time `json:"join_date"`     //
+	Kudosu       Kudosu    `json:"Kudosu"`        //
+	Location     string    `json:"location"`      //
+	MaxBlocks    int       `json:"max_blocks"`    // maximum int of users allowed to be blocked
+	MaxFriends   int       `json:"max_friends"`   // maximum int of friends allowed to be added
+	Occupation   string    `json:"occupation"`    //
+	PostCount    int       `json:"post_count"`    // int of forum posts
+	Title        string    `json:"title"`         // user-specific title
+	TitleURL     string    `json:"title_url"`     //
+	Twitter      string    `json:"twitter"`       //
+	Website      string    `json:"website"`       //
 }
 type UserAccountHistory struct {
 	ID        int       `json:"id"`        //
@@ -110,7 +111,6 @@ type UserCompact struct {
 	Page                             string                 `json:"page "`              // FIXME: Unspecified in docs
 	PreviousUsernames                []string               `json:"previous_usernames"` // FIXME: Unspecified in docs
 	RankedAndApprovedBeatmapsetCount int                    `json:"ranked_and_approved_beatmapset_count"`
-	ReplaysWatchedCount              int                    `json:"replays_watched_counts"`
 	ScoresBestCount                  int                    `json:"scores_best_count"`
 	ScoresFirstCount                 int                    `json:"scores_first_count"`
 	ScoresRecentCount                int                    `json:"scores_recent_count"`
@@ -119,9 +119,7 @@ type UserCompact struct {
 	SupportLevel                     int                    `json:"support_level"`             // FIXME: Unspecified in docs
 	UnrankedBeatmapsetCount          int                    `json:"unranked_beatmapset_count"` // FIXME: Unspecified in docs
 	UnreadPMCount                    int                    `json:"unread_pm_count"`           // FIXME: Unspecified in docs
-	UserAchievements                 int                    `json:"user_achievements"`         // FIXME: Unspecified in docs
 	UserPreferences                  string                 `json:"user_preferences"`          // FIXME: Unspecified in docs
-	RankHistory                      string                 `json:"rank_history"`              // FIXME: Unspecified in docs
 }
 
 type UserGroup struct {
@@ -146,13 +144,13 @@ type UserMonthlyPlaycount struct {
 
 type UserStatistics struct {
 	GradeCounts            GradeCounts
-	HitAccuracy            int          `json:"hit_accuracy"`              // Hit accuracy percentage
+	HitAccuracy            float32      `json:"hit_accuracy"`              // Hit accuracy percentage
 	IsRanked               bool         `json:"is_ranked"`                 // Is actively ranked
 	Level                  UserLevel    `json:"level"`                     //
 	MaxCombo               int          `json:"maximum_combo"`             // Highest maximum combo.
 	PlayCount              int          `json:"play_count"`                // Number of maps played.
 	PlayTime               int          `json:"play_time"`                 // Cumulative time played.
-	PP                     int          `json:"pp"`                        // Performance points
+	PP                     float32      `json:"pp"`                        // Performance points
 	GlobalRank             int          `json:"global_rank"`               // Current rank according to pp.
 	RankedScore            int          `json:"ranked_score"`              // Current ranked score.
 	ReplaysWatchedByOthers int          `json:"replays_watched_by_others"` // Number of replays watched by other users.
@@ -173,4 +171,30 @@ type Country struct {
 type Kudosu struct {
 	Available int `json:"available"`
 	Total     int `json:"total"`
+}
+
+/*
+Returns a *BeatmapUserScore, given:
+
+	`beatmapID`: the ID of the beatmap
+	`userID`: the user you want to get the score of
+	`params`:
+		`mode`: the gamemode to get scores for (string)
+		`mods`: An array of matching mods
+*/
+func (c *GosuClient) GetUserData(userID string) (*User, error) {
+	var ret *User
+	requestURL := "users/" + userID
+
+	if resp, err := c.DoRequest("GET", requestURL, nil); err != nil {
+		fmt.Println("Error in GET request for users/{user}:", err)
+		return nil, err
+	} else {
+		if err = json.Unmarshal(resp, &ret); err != nil {
+			fmt.Println("Error in unmarshaling GET request for users/{user}:", err)
+			return nil, err
+		}
+	}
+
+	return ret, nil
 }
